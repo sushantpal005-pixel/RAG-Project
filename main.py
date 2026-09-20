@@ -2,20 +2,36 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+
 
 load_dotenv()
 
-data = PyPDFLoader("document loaders/mern.pdf")
+data = PyPDFLoader("document loaders/deeplearning.pdf")
 docs = data.load()
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size = 1000,
+    chunk_overlap = 200
+)
+chunks = splitter.split_documents(docs)
 
 template = ChatPromptTemplate.from_messages(
     [("system", "you are a AI that summarizes the text"), 
      ("human", "{data}")]
 )
 
-model = ChatGoogleGenerativeAI(model = "gemini-3.5-flash")
+llm = HuggingFaceEndpoint(
+    repo_id="deepseek-ai/DeepSeek-V4-Flash-0731",
+    # temperature=0.7,
+    max_new_tokens=2048
+    
+)
+
+model = ChatHuggingFace(llm=llm)
 prompt = template.format_messages(data = docs[0].page_content)
 
 result = model.invoke(prompt)
 
-print(result.content[0]["text"])
+print(result.content)
