@@ -5,17 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
-
 load_dotenv()
 
-data = PyPDFLoader("document loaders/deeplearning.pdf")
-docs = data.load()
-
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size = 1000,
-    chunk_overlap = 200
-)
-chunks = splitter.split_documents(docs)
 
 template = ChatPromptTemplate.from_messages(
     [("system", "you are a AI that summarizes the text"), 
