@@ -19,7 +19,7 @@ embedding_model = HuggingFaceEmbeddings(
 vectorstore = Chroma.from_documents(
     documents= docs,
     embedding= embedding_model,
-    persist_directory= "chroma-db"
+    persist_directory= "chroma_db"
 )
 
 result = vectorstore.similarity_search("what is used for data analytics?", k=2)

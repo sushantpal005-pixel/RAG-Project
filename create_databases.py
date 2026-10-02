@@ -20,12 +20,10 @@ splitter = RecursiveCharacterTextSplitter(
 
 chunks = splitter.split_documents(docs)
 
-embedding_model = HuggingFaceEmbeddings(
-    model_name= "sentence-transformers/all-MiniLM-L6-v2"
-)
+embedding_model = HuggingFaceEmbeddings()
 
 vectorstore = Chroma.from_documents(
     documents= chunks,
     embedding= embedding_model,
-    persist_directory= "Chroma_db"
+    persist_directory= "chroma_db"
 )

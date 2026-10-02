@@ -1,28 +1,73 @@
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_huggingface import ChatHuggingFace
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_huggingface import HuggingFaceEndpoint
 
 load_dotenv()
 
+embedding_model = HuggingFaceEmbeddings()
 
-template = ChatPromptTemplate.from_messages(
-    [("system", "you are a AI that summarizes the text"), 
-     ("human", "{data}")]
+vectorstore = Chroma(
+    persist_directory= "chroma_db",
+    embedding_function= embedding_model
+)
+
+retriever = vectorstore.as_retriever(
+    search_type = "mmr",
+    search_kwargs = {
+        "k" : 4,
+        "fetch_k" : 10,
+        "lambda_mult" : 0.5
+    }
 )
 
 llm = HuggingFaceEndpoint(
-    repo_id="deepseek-ai/DeepSeek-V4-Flash-0731",
-    # temperature=0.7,
-    max_new_tokens=2048
-    
+    repo_id = "deepseek-ai/DeepSeek-V4-Flash-0731"
 )
 
-model = ChatHuggingFace(llm=llm)
-prompt = template.format_messages(data = docs[0].page_content)
+model = ChatHuggingFace(
+    llm = llm
+)
 
-result = model.invoke(prompt)
+#prompt template
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system",
+         """you are a helpful AI assistant.
+         Use ONLY the provided context to answer the question,
 
-print(result.content)
+         If the answer is not present in the context,
+         say: "I could not find the answer in the document.
+         """
+        ),
+        ("human",
+         """context: {context}
+         question: {question}
+         """
+        )
+    ]
+)
+
+print("Rag system created ")
+print("press 0 to exit ")
+
+while True:
+    query = input("You : ")
+    if query == "0":
+        break
+    docs = retriever.invoke(query)
+
+    context = "\n\n".join(
+        [doc.page_content for doc in docs]
+    )
+    final_prompt = prompt.invoke({
+        "context" : context,
+        "question" : query
+    })
+
+    response = model.invoke(final_prompt)
+
+    print(f"\n AI : {response.content}")
+    
