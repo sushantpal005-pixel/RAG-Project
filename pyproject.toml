@@ -30,6 +30,7 @@ dependencies = [
     "tiktoken>=0.14.0",
     "torchvision>=0.29.0",
     "transformers>=5.17.0",
+    "wikipedia>=1.4.0",
 ]
 
 [project.scripts]
